@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create Room | 1v1 Code Battle</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 2rem;
+      }
+      .container {
+        width: 100%;
+        max-width: 400px;
+        background: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      .profile-pic {
+        display: block;
+        margin: 0 auto 1.5rem;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .create-button {
+        width: 100%;
+        padding: 0.75rem;
+        background: #ff5722;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 1rem;
+      }
+      .create-button:hover {
+        background: #e64a19;
+      }
+      #message {
+        margin-top: 1rem;
+        text-align: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Profile Picture -->
+      <img src="images/profile-placeholder.png" alt="Profile Picture" class="profile-pic" />
+      <h1>Create Room</h1>
+      <form id="createRoomForm">
+        <div class="form-group">
+          <label for="handle">Codeforces Handle</label>
+          <input type="text" id="handle" name="handle" placeholder="Enter your Codeforces handle" required />
+        </div>
+        <div class="form-group">
+          <label for="roomName">Room Name</label>
+          <input type="text" id="roomName" name="roomName" placeholder="Enter room name" required />
+        </div>
+        <div class="form-group">
+          <label for="difficulty">Difficulty Rating</label>
+          <input type="number" id="difficulty" name="difficulty" placeholder="Enter difficulty rating" required />
+        </div>
+        <button type="submit" class="create-button">Create Room</button>
+      </form>
+      <div id="message"></div>
+    </div>
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const form = document.getElementById('createRoomForm');
+      const messageDiv = document.getElementById('message');
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const handle = document.getElementById('handle').value;
+        const roomName = document.getElementById('roomName').value;
+        const difficulty = document.getElementById('difficulty').value;
+
+        // Emit createRoom event to the server
+        socket.emit('createRoom', { handle, roomName, difficulty });
+        messageDiv.textContent = "Creating room...";
+      });
+
+      // Listen for confirmation from the server
+      socket.on('roomCreated', (data) => {
+        messageDiv.textContent = data.message;
+        // Redirect the user to the room URL after a short delay
+        setTimeout(() => {
+          window.location.href = '/' + data.roomKey;
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>

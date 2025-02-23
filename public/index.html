@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>1v1 Code Battle</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      .content {
+        flex: 1;
+      }
+      .navbar {
+        background: #333;
+        color: #fff;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 70px;
+      }
+      .navbar a {
+        color: #fff;
+        text-decoration: none;
+        margin-left: 1.5rem;
+      }
+      .hero {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: url("background.jpg") no-repeat center center/cover;
+        color: #202020;
+      }
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .hero p {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .cta-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+      }
+      .cta-buttons a {
+        background: #ff5722;
+        padding: 1rem 2rem;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        transition: background 0.3s ease;
+      }
+      .cta-buttons a:hover {
+        background: #e64a19;
+      }
+      .features {
+        padding: 2rem;
+        background: #fff;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        text-align: center;
+      }
+      .feature {
+        flex: 1 1 300px;
+        margin: 1rem;
+      }
+      .feature img {
+        width: 80%;
+        border-radius: 18px;
+        object-fit: contain;
+        margin-bottom: 1rem;
+      }
+      .footer {
+        background: #333;
+        color: #fff;
+        text-align: center;
+        padding: 1rem;
+        margin-top: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="logo"><strong>1v1 Code Battle</strong></div>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/leaderboard">Leaderboard</a>
+        <a href="/howitworks">How It Works</a>
+      </nav>
+    </header>
+
+    <div class="content">
+      <section class="hero" id="home">
+        <h1>1v1 Code Battle</h1>
+        <p>Beat your opponent by coding faster!</p>
+        <div class="cta-buttons">
+          <a href="/createroom">Create Room</a>
+          <a href="/joinroom">Join Room</a>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="feature">
+          <img src="./images/match.webp" alt="Real-time Matching" />
+          <h3>Real-time Matching</h3>
+          <p>
+            Instantly connect with opponents for a fast-paced coding battle.
+          </p>
+        </div>
+        <div class="feature">
+          <img src="./images/submission.webp" alt="Live Submission Checks" />
+          <h3>Live Submission Checks</h3>
+          <p>Receive immediate feedback on your code submissions.</p>
+        </div>
+        <div class="feature">
+          <img src="./images/leaderboard.webp" alt="Dynamic Leaderboards" />
+          <h3>Dynamic Leaderboards</h3>
+          <p>Track your ranking and progress as you compete.</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <p>&copy; 2025 1v1 Code Battle. All rights reserved.</p>
+    </footer>
+  </body>
+</html>
