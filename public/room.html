@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -78,6 +78,23 @@
       document.getElementById("roomTitle").textContent = "Room: " + roomKey;
 
       socket.emit("joinRoomPage", { roomKey });
+      socket.emit("getRoomState", { roomKey });
+
+      function updateGameUI(question) {
+        document.getElementById("question").textContent = `Question: ${question.name}`;
+        document.getElementById("questionpage").href = 
+          `https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
+        document.getElementById("questionpage").textContent = 
+          `Rating = ${question.rating} ----> https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
+        document.getElementById("players").style.display = "none";
+        document.getElementById("startButton").style.display = "none";
+      }
+
+      socket.on("roomStateUpdate", (state) => {
+        if (state.started) {
+          updateGameUI(state.question);
+        }
+      });
 
       socket.on("roomUpdate", (data) => {
         const playersDiv = document.getElementById("players");
@@ -88,13 +105,17 @@
           p.textContent = player;
           playersDiv.appendChild(p);
         });
-        if (data.players.length < 2) {
-          document.getElementById("status").textContent =
-            "Waiting for others to join...";
+        
+        // Check if game is already started
+        if (data.started) {
+          document.getElementById("status").textContent = "Game in progress";
+          document.getElementById("startButton").style.display = "none";
+          document.getElementById("players").style.display = "none";
+        } else if (data.players.length < 2) {
+          document.getElementById("status").textContent = "Waiting for others to join...";
           document.getElementById("startButton").style.display = "none";
         } else {
-          document.getElementById("status").textContent =
-            "Both players are ready!";
+          document.getElementById("status").textContent = "Both players are ready!";
           document.getElementById("startButton").style.display = "block";
         }
       });
@@ -103,7 +124,7 @@
         const problemNames = {};
         try {
           let response = await fetch(
-            `https://codeforces.com/api/user.status?handle=Kraven&from=1&count=10000`
+            `https://codeforces.com/api/user.status?handle=Kraven&from=1&count=10000`,
           );
           if (!response.ok) {
             console.log("Unable to fetch user status");
@@ -115,7 +136,7 @@
             }
           }
           let res = await fetch(
-            `https://codeforces.com/api/problemset.problems?rating=${rating}`
+            `https://codeforces.com/api/problemset.problems?rating=${rating}`,
           );
           let question = await res.json();
           let lst = [];
@@ -140,26 +161,14 @@
           return null;
         }
       }
-      document.getElementById("startButton").addEventListener("click", () => {
-        document.getElementById("players").style.display = "none";
-        document.getElementById("startButton").style.display = "none";
-      });
-
       document
         .getElementById("startButton")
         .addEventListener("click", async () => {
-          let rating = localStorage.getItem("roomDifficulty") || 2000;
-          const question = await fetchRandomQuestion(rating);
+          document.getElementById("players").style.display = "none";
+          document.getElementById("startButton").style.display = "none";
 
-          document.getElementById(
-            "question"
-          ).textContent = `Question: ${question.name}`;
-          document.getElementById(
-            "questionpage"
-          ).href = `https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
-          document.getElementById(
-            "questionpage"
-          ).textContent = `Rating = ${question.rating} ----> https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
+          let rating = parseInt(localStorage.getItem("difficulty")) || 2000;
+          const question = await fetchRandomQuestion(rating);
 
           if (question) {
             console.log("Random Question:", question);
@@ -171,6 +180,7 @@
 
       socket.on("gameStarted", (data) => {
         console.log("Game started in room:", data.roomKey);
+        updateGameUI(data.question);
       });
     </script>
   </body>

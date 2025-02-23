@@ -9,6 +9,7 @@ app.use(express.static(path.resolve("./public")));
 const io = socket(server);
 
 allPlayers = [];
+roomStates = {};
 io.on("connection", (socket) => {
   console.log("New client connected: " + socket.id);
   socket.on("createRoom", (data) => {
@@ -50,12 +51,23 @@ io.on("connection", (socket) => {
     const players = allPlayers
       .filter((player) => player.roomkey === roomKey)
       .map((player) => player.name);
-    io.to(roomKey).emit("roomUpdate", { players });
+    io.to(roomKey).emit("roomUpdate", {
+      players,
+      started: roomStates[roomKey]?.started,
+    });
   });
 
   socket.on("startGame", (data) => {
+    const { roomKey, question } = data;
+    roomStates[roomKey] = { started: true, question };
+    io.to(roomKey).emit("gameStarted", { roomKey, question });
+  });
+
+  socket.on("getRoomState", (data) => {
     const { roomKey } = data;
-    io.to(roomKey).emit("gameStarted", { roomKey });
+    if (roomStates[roomKey]) {
+      socket.emit("roomStateUpdate", roomStates[roomKey]);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -99,8 +111,8 @@ io.on("connection", (socket) => {
 // };
 // fetchQuestion(2000);
 
-app.get("/", (res, rej) => {
-  return res.sendFile("public/index.html");
+app.get("/", (req, res) => {
+  return res.sendFile(path.resolve("public/index.html"));
 });
 
 app.get("/about", (req, res) => {
