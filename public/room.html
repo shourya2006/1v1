@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Room | 1v1 Code Battle</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+      }
+      .container {
+        width: 100%;
+        max-width: 600px;
+        background: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      h1 {
+        margin-bottom: 1rem;
+      }
+      #status {
+        margin: 1rem 0;
+        font-size: 1.2rem;
+      }
+      #players {
+        margin: 1rem 0;
+      }
+      .player {
+        margin: 0.5rem 0;
+        font-weight: bold;
+      }
+      .start-button {
+        margin-top: 1.5rem;
+        padding: 1rem 2rem;
+        background: #4caf50;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 100%;
+      }
+      .start-button:hover {
+        background: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 id="roomTitle">Room:</h1>
+      <div id="status">Waiting for others to join...</div>
+      <div id="players"></div>
+      <div id="question"></div>
+      <a id="questionpage" target="_blank"></a>
+      <button id="startButton" class="start-button" style="display: none">
+        Start
+      </button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const roomKey = window.location.pathname.substring(1);
+      document.getElementById("roomTitle").textContent = "Room: " + roomKey;
+
+      socket.emit("joinRoomPage", { roomKey });
+
+      socket.on("roomUpdate", (data) => {
+        const playersDiv = document.getElementById("players");
+        playersDiv.innerHTML = "";
+        data.players.forEach((player) => {
+          const p = document.createElement("div");
+          p.className = "player";
+          p.textContent = player;
+          playersDiv.appendChild(p);
+        });
+        if (data.players.length < 2) {
+          document.getElementById("status").textContent =
+            "Waiting for others to join...";
+          document.getElementById("startButton").style.display = "none";
+        } else {
+          document.getElementById("status").textContent =
+            "Both players are ready!";
+          document.getElementById("startButton").style.display = "block";
+        }
+      });
+
+      async function fetchRandomQuestion(rating) {
+        const problemNames = {};
+        try {
+          let response = await fetch(
+            `https://codeforces.com/api/user.status?handle=Kraven&from=1&count=10000`
+          );
+          if (!response.ok) {
+            console.log("Unable to fetch user status");
+          }
+          let data = await response.json();
+          for (let i of data.result) {
+            if (i.verdict === "OK") {
+              problemNames[i.problem.name] = i.problem.rating;
+            }
+          }
+          let res = await fetch(
+            `https://codeforces.com/api/problemset.problems?rating=${rating}`
+          );
+          let question = await res.json();
+          let lst = [];
+          for (let i of question.result.problems) {
+            if (!problemNames[i.name] && i.rating === rating) {
+              lst.push({
+                name: i.name,
+                rating: i.rating,
+                contestId: i.contestId,
+                index: i.index,
+              });
+            }
+          }
+          if (lst.length > 0) {
+            const randomQuestion = lst[Math.floor(Math.random() * lst.length)];
+            return randomQuestion;
+          } else {
+            return null;
+          }
+        } catch (e) {
+          console.log(e);
+          return null;
+        }
+      }
+      document.getElementById("startButton").addEventListener("click", () => {
+        document.getElementById("players").style.display = "none";
+        document.getElementById("startButton").style.display = "none";
+      });
+
+      document
+        .getElementById("startButton")
+        .addEventListener("click", async () => {
+          let rating = localStorage.getItem("roomDifficulty") || 2000;
+          const question = await fetchRandomQuestion(rating);
+
+          document.getElementById(
+            "question"
+          ).textContent = `Question: ${question.name}`;
+          document.getElementById(
+            "questionpage"
+          ).href = `https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
+          document.getElementById(
+            "questionpage"
+          ).textContent = `Rating = ${question.rating} ----> https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
+
+          if (question) {
+            console.log("Random Question:", question);
+            socket.emit("startGame", { roomKey, question });
+          } else {
+            console.log("No suitable question found for rating", rating);
+          }
+        });
+
+      socket.on("gameStarted", (data) => {
+        console.log("Game started in room:", data.roomKey);
+      });
+    </script>
+  </body>
+</html>
