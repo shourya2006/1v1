@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -56,12 +56,32 @@
       .start-button:hover {
         background: #45a049;
       }
+
+      .preloader {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-radius: 50%;
+        border-top: 5px solid #ff5722;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <h1 id="roomTitle">Room:</h1>
       <div id="status">Waiting for others to join...</div>
+      <div class="preloader" id="preloader"></div>
       <div id="players"></div>
       <div id="question"></div>
       <a id="questionpage" target="_blank"></a>
@@ -81,11 +101,15 @@
       socket.emit("getRoomState", { roomKey });
 
       function updateGameUI(question) {
-        document.getElementById("question").textContent = `Question: ${question.name}`;
-        document.getElementById("questionpage").href = 
-          `https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
-        document.getElementById("questionpage").textContent = 
-          `Rating = ${question.rating} ----> https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
+        document.getElementById(
+          "question"
+        ).textContent = `Question: ${question.name}`;
+        document.getElementById(
+          "questionpage"
+        ).href = `https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
+        document.getElementById(
+          "questionpage"
+        ).textContent = `Rating = ${question.rating} ----> https://codeforces.com/problemset/problem/${question.contestId}/${question.index}`;
         document.getElementById("players").style.display = "none";
         document.getElementById("startButton").style.display = "none";
       }
@@ -99,23 +123,28 @@
       socket.on("roomUpdate", (data) => {
         const playersDiv = document.getElementById("players");
         playersDiv.innerHTML = "";
-        data.players.forEach((player) => {
+        set = new Set(data.players);
+        set.forEach((player) => {
           const p = document.createElement("div");
           p.className = "player";
           p.textContent = player;
           playersDiv.appendChild(p);
         });
-        
-        // Check if game is already started
         if (data.started) {
           document.getElementById("status").textContent = "Game in progress";
           document.getElementById("startButton").style.display = "none";
           document.getElementById("players").style.display = "none";
-        } else if (data.players.length < 2) {
+        } else if (set.size == 1) {
           document.getElementById("status").textContent = "Waiting for others to join...";
+          document.getElementById("preloader").style.display = "block";
           document.getElementById("startButton").style.display = "none";
+        }else if(set.size == 0){
+            document.getElementById("status").textContent = "No players in the room, Please Create a room and invite your friends!";
+            document.getElementById("preloader").style.display = "none";
+            document.getElementById("startButton").style.display = "none";
         } else {
-          document.getElementById("status").textContent = "Both players are ready!";
+          document.getElementById("status").textContent = "All players are ready!";
+          document.getElementById("preloader").style.display = "none";
           document.getElementById("startButton").style.display = "block";
         }
       });
@@ -124,7 +153,7 @@
         const problemNames = {};
         try {
           let response = await fetch(
-            `https://codeforces.com/api/user.status?handle=Kraven&from=1&count=10000`,
+            `https://codeforces.com/api/user.status?handle=Kraven&from=1&count=10000`
           );
           if (!response.ok) {
             console.log("Unable to fetch user status");
@@ -136,7 +165,7 @@
             }
           }
           let res = await fetch(
-            `https://codeforces.com/api/problemset.problems?rating=${rating}`,
+            `https://codeforces.com/api/problemset.problems?rating=${rating}`
           );
           let question = await res.json();
           let lst = [];
